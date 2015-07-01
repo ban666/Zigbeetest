@@ -53,14 +53,7 @@ def device_access(sid,mac_type):
     print tstr
     result=cmd_send(sid,tstr)
     return result
-    '''
-    if result=='MacIn@1':
-        return 1
-    elif result=='MacIn@2':
-        return 0
-    else:
-        return -1
-    '''
+
 def device_logout(sid,mac):
     tstr='MacOut@'
     for i in mac:
@@ -68,14 +61,7 @@ def device_logout(sid,mac):
     tstr=tstr.rstrip(',')
     result=cmd_send(sid,tstr)
     return result
-    '''
-    if result=='MacOut@1':
-        return 1
-    elif result=='MacOut@2':
-        return 0
-    else:
-        return -1
-    '''
+
 def device_control(sid,mac_status):
     
     for i in mac_status:
@@ -138,42 +124,5 @@ print len(test.mac_type_list)
 #device_logout(s,['10001'])
 #device_control(s,mac_status)
 #print len(test.mac_list)
-'''
-dat=check_online(s,test.mac_list) 
-print dat
-'''
-#print len(dat)
-#get_mac_type(dat,mac_type)
-cmdlist=cmd_generate(mac_type,type_cmd_dict)
-#print cmdlist
-'''
-times=2000
-stime=time.time()
-print time.strftime("%Y%m%d%H%M%S", time.localtime())
-for i in range(times):
-    device_control(s,cmdlist)
-    print "times:",i
-etime=time.time()
-print 'cost time:',etime-stime
-print time.strftime("%Y%m%d%H%M%S", time.localtime())
-'''
-'''
-print dat
-def get_mac_type(list1,list2):
-    tlist=[]
-    for i in list1:
-        if i[-1]!='1':
-            tlist.append(i[:16])
-    tlist2=[x[:16] for x in list2]
-    tlist3=[]
-    for i in tlist:
-        tlist3.append(list2[tlist2.index(i)])
-    print len(tlist3)
-    print tlist3
-    return tlist3
 
-sre=cmd_send(s,dat)
-recvd=s.recv(1024)
-print recvd.encode('hex')[24:].decode('hex')
-'''
 s.close()

@@ -4,6 +4,12 @@
 # @Date:   2015-04-15 14:38:49
 # @Last Modified by:   liaoben
 # @Last Modified time: 2015-06-15 11:14:05
+
+__author__ = 'Liao Ben'
+
+'''
+    Library for send email
+'''
 import email
 import mimetypes
 from email.MIMEMultipart import MIMEMultipart
@@ -14,7 +20,7 @@ import smtplib,os
 def sendEmail(server,user,passwd, fromAdd, toAdd, subject, plainText, htmlText='',attFile=''):
         msg=''
         strFrom = fromAdd
-        strTo = ', '.join(toAdd)
+        strTo = ','.join(toAdd)
 
         if not (server and user and passwd) :
                 print 'incomplete login info, exit now'
@@ -61,12 +67,15 @@ def sendEmail(server,user,passwd, fromAdd, toAdd, subject, plainText, htmlText='
         try:
             smtp.connect(server)
             smtp.login(user, passwd)
-            smtp.sendmail(strFrom, strTo, msgRoot.as_string())
+            print strTo
+            smtp.sendmail(strFrom, strTo.split(','), msgRoot.as_string())
             smtp.quit()
             #        smtp.sendmail(strFrom, strTo, msgRoot.as_string())
         except Exception as e:
+            print 'err!'
             msg=e
         if msg:
             return msg
+            print msg
         return 1
 

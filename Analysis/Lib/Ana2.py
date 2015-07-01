@@ -1,10 +1,16 @@
 # -*- coding:utf-8 -*-
- 
-import os,sys,re,time,excelp
 
+__author__ = 'Liao Ben'
 
+'''
+    Library for Analyzing Zigbee_data
+'''
+import os,re,time,excelp
 
 class ConfigAnalysis:
+    '''
+    Library for Analyzing Zigbee_data
+    '''
     def __init__(self,file,outputFolder):
         self.file=file
         self.outputFolder=outputFolder
@@ -45,7 +51,12 @@ class ConfigAnalysis:
         }
 
         self.replylist=['04','11','14','15','16','17','18','06']
+
+
     def FileCheck_Comread(self):
+        '''
+        get data from file
+        '''
         with open(self.file,'r') as f:
             for i in f:
                 self.list1.append(i.rstrip())
@@ -60,6 +71,9 @@ class ConfigAnalysis:
 
 
     def FileCheck_debug(self):
+        '''
+        get data from file(format as debug_hhy)
+        '''
         with open(self.file,'r') as f:
             pattern = re.compile('.*?:(.*)',re.S)
             year = time.strftime("%Y", time.localtime())
@@ -82,6 +96,10 @@ class ConfigAnalysis:
 
 
     def Filecheck1(self,stra):
+        '''
+        check whether the data is valid and stitching
+        :param stra: string object like 'f8','f8e6'
+        '''
         for i in range(len(self.list2)+2):
             try:
                 if self.list2[i].find(stra)!=0:
@@ -94,6 +112,9 @@ class ConfigAnalysis:
                 pass
 
     def Filecheck2(self):
+        '''
+        check whether the data is valid and stitching
+        '''
         for i in range(len(self.list2)+2):
             try:
                 if self.list2[i].count('f8e6')>=2:
@@ -111,6 +132,11 @@ class ConfigAnalysis:
                 pass    
 
     def GetStatus(self):
+        '''
+        check whether the data is completely legal
+        :return: 0:the date is completely legal
+                 1:the date isn't completely legal
+        '''
         for i in self.list2:
             if i.find('f8')!=0:
                 return 1
@@ -121,15 +147,11 @@ class ConfigAnalysis:
         return 0
 
 
-    #comread所得数据拼接
     def FileConnect_Comread(self):
+        '''
+        splicing data until the data was completely legal
+        '''
         self.FileCheck_Comread()
-        '''
-        for i in range(10):
-            self.Filecheck1('f8')
-            self.Filecheck1('f8e6')
-            self.Filecheck2()
-        '''
         status=self.GetStatus()
         while 0!=status:
             self.Filecheck1('f8')
@@ -165,8 +187,12 @@ class ConfigAnalysis:
                 pass
         return result
 
-    #debug_hhy所得数据拼接
+
     def FileConnect_debug(self):
+        '''
+        splicing data until the data was completely legal
+        for file got by debug_hhy
+        '''
         self.FileCheck_debug()
         for i in range(3):
             self.Filecheck1('f8')
@@ -200,18 +226,18 @@ class ConfigAnalysis:
     #根据对应id分类数据
     #type为文件种类：1、debug_hhy所得数据，2、Comread所得数据
     def GetDate(self,type=1):
+        '''
+        splicing data for different file type
+        :param type:different file type 1.debug_hhy 2.comread
+        :return:
+        '''
         if type==1:
             result=self.FileConnect_debug()
         elif type==2:
             result=self.FileConnect_Comread()
         else:
             print 'Error!'
-        tlist=[]
-        tlist_id=[]
-        tindex=""
         date = self.list3[0][0:10].replace('-','')
-
-        #print self.iddict.items()
         for i,k in self.iddict.items():
             idlist=[]
             dtype = self.devicedict[k].decode('utf-8')
@@ -219,8 +245,6 @@ class ConfigAnalysis:
             for j in result[0]:
                 if j[24:28]==i:
                     idlist.append(j.strip())
-            #print "mac为 ",i,"的",dtype,"设备共有",len(idlist),'条数据'
-            #print "mac为 ",i,"的","设备共有",len(idlist),'条数据'
             with open(wfile,'w') as f:
                 for l in idlist:
                     f.write(l.strip())
@@ -229,7 +253,17 @@ class ConfigAnalysis:
         result=[self.list1,self.list2,self.list3,self.iddict]
         return result
 
+    #根据ID获取对应节点异常数据条数，并保存到文件
     def GetErrById(self,id,length,sid,did,stra):
+        '''
+        get error messages count,and save the error massage to file
+        :param id:string object that like '0004',device id
+        :param length:int object that like 52,message length
+        :param sid:int object that like 30,message length
+        :param did:int object that like 52,message length
+        :param stra:string object that like 'f1040000',the correct string
+        :return:
+        '''
         date = self.list3[0][0:10].replace('-','')
         idlist = []
         lista = []
@@ -250,23 +284,30 @@ class ConfigAnalysis:
                 f.flush()
 
     def GetTimeStoE(self):
+        '''
+        get the start time and the end time
+        :return:list object that like['2015-05-15 17:20:31','2015-05-16 17:20:31']
+        '''
         result = [self.list1[0][:20],self.list1[-1][:20]]
         return result
 
-
+    #根据不同设备类型获取信息，分边保存到对应文件,仅支持带有状态位的设备
     def GetErrByType(self,ttype,time_range=600):
+        '''
+        get all infomation and save to file by different device type.
+        :param ttype: sting object that like '04','11'. device type
+        :param time_range: int object that like 300,100. timeout
+        :return: infomation list
+        '''
         date = self.list3[0][0:10].replace('-','')
         idlist = []
-        
         type = self.devicedict[ttype].decode('utf-8')  
         tlen = self.errdict[ttype][0]
         sid  = self.errdict[ttype][1]
         did  = self.errdict[ttype][2]
         tstr = self.errdict[ttype][3] 
         result = []
-        
-        
-        
+
         for i,j in self.iddict.items():
             if j==ttype:
                 idlist.append(i)
@@ -315,15 +356,7 @@ class ConfigAnalysis:
                     timeout_list.append(tout_list)
                     list3.append(timelist[l])
             listd_without_repeat=len(set(listd))            
-            averagetime=self.GetAverage(list4)  
-            '''
-            print "mac为 ",mac,"的",type,"设备状态信息数据共有",idata_length,'条'
-            print "mac为 ",mac,"的",type,"设备组网信息数据共有",gdata_length,'条'
-            print "mac为 ",mac,"的",type,"设备异常数据共有",len(listb),'条'
-            print "mac为 ",mac,"的",type,"设备掉网数据共有",len(list3),'条'
-            print "mac为 ",mac,"的",type,"设备数据开始时间为:",lista[0][0:20]
-            print "mac为 ",mac,"的",type,"设备数据结束时间为:",lista[-1][0:20]
-            '''
+            averagetime=self.GetAverage(list4)
             rlist=[i,mac,type.encode('utf-8'),gdata_length,idata_length,len(listb),len(list3),losecount,len(listd),listd_without_repeat,lista[0][0:20],lista[-1][0:20]]
             result.append(rlist)
             wfile=self.outputFolder+type+'/'+date+'_'+i+'_error.txt'
@@ -348,7 +381,14 @@ class ConfigAnalysis:
                     f.write('\n')
         return result
 
+    #根据不同设备类型获取信息，分边保存到对应文件,仅支持不带状态位的设备
     def GetInFoByType(self,ttype,time_range=600):
+        '''
+        get all infomation and save to file by different type.
+        :param ttype: sting object that like '04','11'. device type
+        :param time_range: int object that like 300,100. timeout
+        :return:infomation list
+        '''
         date = self.list3[0][0:10].replace('-','')
         idlist = []
         type = self.devicedict[ttype].decode('utf-8')  
@@ -398,15 +438,7 @@ class ConfigAnalysis:
                     timeout_list.append(tout_list)
                     list3.append(timelist[l])
             averagetime=self.GetAverage(list4)  
-            listd_without_repeat=len(set(listd)) 
-            '''
-            print "mac为 ",i,"的",type,"设备状态信息数据共有",idata_length,'条'
-            print "mac为 ",i,"的",type,"设备组网信息数据共有",gdata_length,'条'
-            print "mac为 ",i,"的",type,"设备异常数据共有",0,'条'
-            print "mac为 ",i,"的",type,"设备掉网数据共有",len(list3),'条'
-            print "mac为 ",i,"的",type,"设备数据开始时间为:",lista[0][0:20]
-            print "mac为 ",i,"的",type,"设备数据结束时间为:",lista[-1][0:20]
-            '''
+            listd_without_repeat=len(set(listd))
             rlist=[i,mac,type.encode('utf-8'),gdata_length,idata_length,0,len(list3),losecount,len(listd),listd_without_repeat,lista[0][0:20],lista[-1][0:20]]
             result.append(rlist)
             wfile=self.outputFolder+type+'/'+date+'_'+i+'_Loseconnect.txt'
@@ -427,23 +459,16 @@ class ConfigAnalysis:
         return result
 
     def GetRepeatId(self):
+        '''
+        check whether the content has repeated id.
+        :return:list objecet that like['04','0c'].device type who were given a duplicated ID
+        '''
         idlist=[]
         for i,j in self.iddict.items():
             idlist.append(i)
         for i in idlist:
-            mac=''
-            typelist=[]
-            timelist=[]
-            list3=[]
-            list4=[]
-            gdata_length=0
-            idata_length=0
-            losecount=0
-            timeout_list=[]
+            typelist = []
             lista = []
-            listb = []
-            listc = []
-            listd = []
             for j in self.list1:
                 if j[24:28]==i:
                     lista.append(j)
@@ -456,6 +481,12 @@ class ConfigAnalysis:
 
 
     def TimeRange(self,a,b):
+        '''
+        computing time
+        :param a:string object.start time
+        :param b:string object.end time
+        :return:int object.time difference
+        '''
         time1=time.mktime(time.strptime(a,'%Y-%m-%d %H:%M:%S'))
         time2=time.mktime(time.strptime(b,'%Y-%m-%d %H:%M:%S'))
         return time2-time1
@@ -469,14 +500,14 @@ class ConfigAnalysis:
         return r/len(lista)
 
 
-
-        
-    def GetAllErrByType(self,time_range=600):        
+    def GetAllErrByType(self,time_range=600):
+        '''
+        get all information and save to file.
+        :param time_range: int object.time range
+        :return:list object contains all infomation to write to excel
+        '''
         list1=[]
         result=[]
-        ErrTypelist=[]
-        RTypelist=[]
-        typelist=[]
         for i,j in self.iddict.items():
             list1.append(j)
         for i in list(set(list1)):
@@ -485,31 +516,22 @@ class ConfigAnalysis:
             if self.errdict.has_key(i):
                 rlist=self.GetErrByType(i,time_range)
                 print len(rlist)
-                #typelist.append(tlist)
             else:
                 rlist=self.GetInFoByType(i,time_range)
                 print len(rlist)
-                #typelist.append(tlist)
             for j in rlist:
                 result.append(j)
         print len(result)
-        #print typelist
         return result
 
-    def GetIdType(self,tfile):        
-        list1=[]
-        result=[]
-        ErrTypelist=[]
-        RTypelist=[]
-        i=0
-        with open(tfile,'w') as f:
-            f.write('[cmdlist]\n')
-            for i,j in self.iddict.items():
-                f.write('device'+i+'='+i+','+j+'\n')
-
-
-
     def WriteToExcel(self,data):
+        '''
+        save the infomation to excel.
+        :param data: list object got by GetAllErrByType()
+        :return:string object.file name
+        '''
         date = self.list3[0][:19].replace(' ','').replace('-','').replace(':','')
         fname=self.outputFolder+date+'_'+'_Excel.xlsx'
         excelp.ExcelWriteForAna(fname,data)
+        return fname
+

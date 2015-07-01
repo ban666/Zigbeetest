@@ -2,10 +2,19 @@
 # -*- coding: utf-8 -*-
 # @Author: liaoben
 
+'''
+    Library for zipfile
+'''
 import os,os.path
 import zipfile
 
 def zip_dir(dirname,zipfilename):
+    '''
+    compression and save the file.
+    :param dirname:string object.folder name
+    :param zipfilename:string object.zipfile name
+    :return:
+    '''
     filelist = []
     if os.path.isfile(dirname):
         filelist.append(dirname)
